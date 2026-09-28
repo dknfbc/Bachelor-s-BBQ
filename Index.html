@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bachelor's BBQ">
+  
+  <title>Bachelor's BBQ - POS</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="manifest" id="manifest-placeholder">
+
+  <style>
+    :root {
+      --bg-dark: #0a0706;
+      --card-bg: rgba(22, 16, 14, 0.92);
+      --card-border: rgba(255, 94, 0, 0.28);
+      --accent-flame: #ff5722;
+      --accent-gold: #ff9800;
+      --text-main: #f5f5f5;
+      --text-muted: #a69892;
+      --input-bg: #150f0d;
+      --border-radius: 16px;
+      --logo-url: none;
+      --poster-url: none;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(255, 87, 34, 0.22), transparent 75%),
+        linear-gradient(rgba(10, 7, 6, 0.94), rgba(10, 7, 6, 0.98));
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Screen VFX Canvas Layer */
+    #vfx-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    header {
+      padding: 20px 16px 14px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255,87,34,0.15) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(255, 87, 34, 0.2);
+    }
+
+    .brand-logo-img {
+      width: 105px; height: 105px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-gold);
+      box-shadow: 0 0 25px rgba(255, 87, 34, 0.5);
+      margin: 0 auto 6px;
+      background-image: var(--logo-url);
+      background-size: cover;
+      background-position: center;
+      background-color: #1a100c;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+    
+    .brand-logo-img::after {
+      content: "Tap to set Logo";
+      font-size: 0.65rem; color: #ff9800; text-align: center;
+      display: var(--logo-text-display, block);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 16px rgba(255, 87, 34, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(255, 152, 0, 0.7); }
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif; font-size: 1.6rem; letter-spacing: 2px;
+      background: linear-gradient(90deg, #ffc107, #ff5722, #ff9800);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 2px;
+    }
+    .tagline { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+
+    .container { max-width: 520px; width: 100%; margin: 0 auto; padding: 16px; flex: 1; }
+
+    #install-banner {
+      background: linear-gradient(90deg, #ff9800, #ff5722);
+      color: #fff; padding: 12px; border-radius: 12px;
+      text-align: center; font-weight: 700; margin-bottom: 15px;
+      cursor: pointer; display: none; box-shadow: 0 4px 15px rgba(255,87,34,0.4);
+    }
+
+    #poster-setup-banner {
+      background: rgba(255, 255, 255, 0.05); border: 1px dashed #ff9800;
+      color: #ff9800; padding: 12px; border-radius: 12px; text-align: center;
+      font-size: 0.85rem; margin-bottom: 15px; cursor: pointer;
+      display: var(--poster-banner-display, block);
+    }
+
+    .nav-pills {
+      display: flex; background: #150f0d; padding: 4px;
+      border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 4px;
+    }
+    .nav-btn {
+      flex: 1; padding: 10px 4px; font-size: 0.82rem; font-weight: 600;
+      color: var(--text-muted); background: transparent; border: none;
+      border-radius: 10px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .nav-btn.active { color: #fff; background: linear-gradient(135deg, var(--accent-flame), #c43000); }
+
+    .card {
+      background: var(--card-bg); backdrop-filter: blur(8px);
+      border: 1px solid var(--card-border); border-radius: var(--border-radius);
+      padding: 16px; margin-bottom: 16px;
+    }
+    .section-title { font-size: 1.02rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: var(--accent-gold); }
+
+    .menu-date-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255, 152, 0, 0.07); border: 1px solid rgba(255, 152, 0, 0.25);
+      border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
+    }
+    .date-label-group { display: flex; flex-direction: column; }
+    .date-subtext { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .date-readable { font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); }
+    .order-date-input { background: #1a100c; color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; cursor: pointer; }
+
+    .kebab-item {
+      display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+      padding: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px; margin-bottom: 12px;
+    }
+    .item-meta { display: flex; align-items: center; gap: 12px; }
+
+    .kebab-thumb {
+      width: 54px; height: 54px; border-radius: 10px; border: 1.5px solid rgba(255, 152, 0, 0.5);
+      flex-shrink: 0; background-color: #2a1b15; background-size: cover; background-position: center;
+    }
+
+    .item-info h4 { font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .item-info span { font-size: 0.8rem; color: var(--accent-gold); font-weight: 600; }
+
+    select, input {
+      background: var(--input-bg); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 9px 12px; border-radius: 10px; font-size: 0.9rem; outline: none;
+    }
+    select:focus, input:focus { border-color: var(--accent-flame); }
+
+    .custom-select-qty {
+      min-width: 105px; font-weight: 700; color: var(--accent-gold); text-align: center;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    /* Live calculation box with flame flare styling */
+    .live-calc {
+      position: relative;
+      background: linear-gradient(145deg, #1d1310, #120b08); 
+      border: 1px dashed var(--accent-flame);
+      border-radius: 14px; 
+      padding: 14px 18px; 
+      margin-top: 14px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .live-calc.sparkle-flare {
+      box-shadow: 0 0 25px rgba(255, 152, 0, 0.6), inset 0 0 15px rgba(255, 87, 34, 0.3);
+      border-color: #ffc107;
+      transform: scale(1.02);
+    }
+
+    .live-calc-val { 
+      font-size: 1.7rem; 
+      font-weight: 700; 
+      color: var(--accent-gold); 
+      text-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+    }
+
+    .btn-submit {
+      width: 100%; margin-top: 16px; padding: 15px; font-size: 1.05rem; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #ff5722 0%, #d84315 100%); border: none; border-radius: 14px; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255, 87, 34, 0.4);
+      transition: transform 0.1s ease;
+    }
+    .btn-submit:active { transform: scale(0.97); }
+
+    .record-card {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 0;
+    }
+    .record-card:last-child { border-bottom: none; }
+    .record-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+    }
+    .record-actions {
+      display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end;
+    }
+    .btn-action {
+      background: #1b120f; border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff; font-size: 0.75rem; font-weight: 600;
+      padding: 4px 10px; border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-edit { border-color: rgba(255, 152, 0, 0.4); color: var(--accent-gold); }
+    .btn-delete { border-color: rgba(244, 67, 54, 0.4); color: #f44336; }
+
+    .admin-item-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px; margin-bottom: 10px; gap: 10px;
+    }
+    .admin-thumb-box {
+      width: 44px; height: 44px; border-radius: 8px; border: 1px solid #ff9800;
+      background-size: cover; background-position: center; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #ff9800;
+      background-color: #2a1b15; flex-shrink: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 30px;
+    }
+    .admin-trigger-link {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.25);
+      text-decoration: none;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .admin-trigger-link:hover { color: var(--accent-gold); }
+
+    .overlay-modal {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(6px);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-content {
+      background: #17100e; border: 1px solid var(--accent-flame);
+      width: 100%; max-width: 450px; border-radius: 18px; padding: 18px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Particle Transition VFX Canvas -->
+  <canvas id="vfx-canvas"></canvas>
+
+  <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="processImage(event, 'logo')">
+  <input type="file" id="poster-upload" accept="image/*" class="hidden" onchange="processImage(event, 'poster')">
+  <input type="file" id="item-image-upload" accept="image/*" class="hidden" onchange="processItemImage(event)">
+
+  <header>
+    <div class="brand-logo-img" onclick="document.getElementById('logo-upload').click()"></div>
+    <h1>Bachelor's BBQ</h1>
+    <p class="tagline">Smoke • Grill • Repeat</p>
+  </header>
+
+  <div class="container">
+    <div id="install-banner" onclick="installApp()">📲 Tap here to Install App to Home Screen</div>
+    <div id="poster-setup-banner" onclick="document.getElementById('poster-upload').click()">
+      📸 Setup: Tap to Upload your Grand Opening Poster for default kebab icons!
+    </div>
+
+    <div class="nav-pills">
+      <button class="nav-btn active" onclick="switchTab('newSale')">Order</button>
+      <button class="nav-btn" onclick="switchTab('dailyReport')">Daily</button>
+      <button class="nav-btn" onclick="switchTab('allTime')">Records</button>
+    </div>
+
+    <!-- TAB 1: ORDER -->
+    <section id="tab-newSale">
+      <div class="card">
+        <div class="menu-date-bar">
+          <div class="date-label-group">
+            <span class="date-subtext">Order Date</span>
+            <span class="date-readable" id="menu-date-display">Today</span>
+          </div>
+          <input type="date" id="order-date-picker" class="order-date-input" onchange="updateMenuDateDisplay()">
+        </div>
+
+        <div class="section-title">🍢 Kebabs & Quantity</div>
+        <div id="menu-items-container"></div>
+
+        <div style="margin-top: 14px;">
+          <label style="font-size: 0.85rem; font-weight: 600; display:block; margin-bottom:6px;">Payment Mode</label>
+          <select id="payment-mode" style="width:100%" onchange="checkSplit()">
+            <option value="Online">Online (UPI)</option>
+            <option value="Offline">Offline (Cash)</option>
+            <option value="Mixed">Mixed Payment</option>
+          </select>
+        </div>
+
+        <div id="split-box" class="hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+          <div><label style="font-size:0.75rem;">Online (₹)</label><input type="number" id="split-online" oninput="calcTotal(false)"></div>
+          <div><label style="font-size:0.75rem;">Cash (₹)</label><input type="number" id="split-offline" oninput="calcTotal(false)"></div>
+        </div>
+
+        <!-- Live calculation box with flame particle trigger -->
+        <div class="live-calc" id="live-calc-box">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Total Amount</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);"><span id="live-sticks">0</span> sticks total</div>
+          </div>
+          <div class="live-calc-val">₹<span id="live-total">0</span></div>
+        </div>
+
+        <button class="btn-submit" id="submit-btn" onclick="submitOrder(event)">Confirm & Sizzle 🔥</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: DAILY REPORT -->
+    <section id="tab-dailyReport" class="hidden">
+      <div class="card"><input type="date" id="date-picker" style="width: 100%;" onchange="renderDaily()" /></div>
+      <div class="card" id="daily-stats" style="font-size:0.9rem; line-height:1.6;"></div>
+      <div class="card" id="daily-list"></div>
+    </section>
+
+    <!-- TAB 3: ALL TIME -->
+    <section id="tab-allTime" class="hidden">
+      <div class="card" id="all-stats" style="font-size:0.9rem; line-height:1.6;"></div>
+      <button class="btn-submit" style="margin-bottom:15px; font-size:0.9rem;" onclick="exportData()">📥 Download CSV Export</button>
+      <div class="card" id="all-list"></div>
+    </section>
+  </div>
+
+  <footer>
+    <a class="admin-trigger-link" onclick="openAdminModal()">⚙️ Management Settings</a>
+  </footer>
+
+  <!-- ADMIN POPUP MODAL -->
+  <div id="admin-modal" class="overlay-modal hidden">
+    <div class="modal-content">
+      <div id="admin-lock-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="color:var(--accent-gold); font-size:1.1rem;">🔒 Owner Passcode</h3>
+          <span onclick="closeAdminModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Enter your PIN to manage prices and items.</p>
+        <input type="password" id="admin-pin-input" placeholder="Enter PIN" style="width: 100%; margin-bottom: 12px; text-align: center; letter-spacing: 4px; font-size: 1.2rem;">
+        <div style="display:flex; gap:10px;">
+          <button class="btn-action" style="flex:1; justify-content:center; padding:10px;" onclick="closeAdminModal()">Cancel</button>
+          <button class="btn-submit" style="flex:1; margin-top:0; padding:10px;" onclick="unlockAdmin()">Unlock</button>
+        </div>
+      </div>
+
+      <div id="admin-console" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+          <h3 style="color:var(--accent-gold); font-size:1.1rem;">👑 Owner Console</h3>
+          <button class="btn-action btn-delete" onclick="lockAdminConsole()">🔒 Lock & Close</button>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <h4 style="font-size:0.9rem; color:var(--accent-gold); margin-bottom:8px;">⚡ Update Prices & Offers</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Change any item's price for today or special offers. Tap Save to apply.</p>
+          <div id="admin-items-list"></div>
+        </div>
+
+        <div style="margin-bottom:18px; border-top:1px solid rgba(255,255,255,0.08); padding-top:14px;">
+          <h4 style="font-size:0.9rem; color:var(--accent-gold); margin-bottom:8px;">➕ Add New Kebab / Item</h4>
+          <div style="margin-bottom: 8px;">
+            <input type="text" id="new-item-name" placeholder="Item Name (e.g. Mutton Seekh)" style="width:100%;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+            <input type="number" id="new-item-price" placeholder="Price (₹)" style="width:100%;">
+            <button onclick="triggerNewItemPhoto()" class="btn-action" style="width:100%; height:40px; justify-content:center;">📷 Upload Photo</button>
+          </div>
+          <div id="new-item-photo-preview" style="margin-bottom: 8px; font-size: 0.75rem; color: var(--accent-gold);"></div>
+          <button class="btn-submit" style="margin-top: 0; padding:10px;" onclick="addNewMenuItem()">Add to Menu</button>
+        </div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:14px;">
+          <h4 style="font-size:0.9rem; color:var(--accent-gold); margin-bottom:8px;">🔐 Change Owner PIN</h4>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="new-admin-pin" placeholder="Enter New PIN" style="flex:1;">
+            <button class="btn-action btn-edit" onclick="updateAdminPin()">Update PIN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT RECORD MODAL -->
+  <div id="edit-modal" class="overlay-modal hidden">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="color:var(--accent-gold); font-size:1.1rem;">✏️ Edit Order Record</h3>
+        <span onclick="closeEditModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);">&times;</span>
+      </div>
+      <input type="hidden" id="edit-order-id">
+      
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Date</label>
+        <input type="date" id="edit-date" style="width:100%;">
+      </div>
+
+      <div id="edit-modal-items-container" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;"></div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Payment Mode</label>
+        <select id="edit-mode" style="width:100%" onchange="checkEditSplit()">
+          <option value="Online">Online (UPI)</option>
+          <option value="Offline">Offline (Cash)</option>
+          <option value="Mixed">Mixed Payment</option>
+        </select>
+      </div>
+
+      <div id="edit-split-box" class="hidden" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div><label style="font-size:0.75rem;">Online (₹)</label><input type="number" id="edit-split-online"></div>
+        <div><label style="font-size:0.75rem;">Cash (₹)</label><input type="number" id="edit-split-offline"></div>
+      </div>
+
+      <div style="font-size:1.1rem; font-weight:700; color:var(--accent-gold); margin:12px 0; text-align:right;">
+        Total: ₹<span id="edit-total-val">0</span>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeEditModal()" class="btn-action" style="flex:1; justify-content:center; padding:10px;">Cancel</button>
+        <button onclick="saveEditedOrder()" class="btn-submit" style="flex:1; margin-top:0; padding:10px;">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_MASTER_PIN = '1234';
+
+    const DEFAULT_CATALOG = [
+      { id: 'tikka', name: 'Chicken Tikka', price: 90, posterPos: '8% 57%', customImg: null },
+      { id: 'hariyali', name: 'Chicken Hariyali', price: 90, posterPos: '92% 57%', customImg: null },
+      { id: 'reshmi', name: 'Chicken Reshmi', price: 100, posterPos: '8% 78%', customImg: null },
+      { id: 'seekh', name: 'Seekh Kebab', price: 70, posterPos: '92% 78%', customImg: null }
+    ];
+
+    let catalog = [];
+    let deferredPrompt;
+    let pendingUploadItemId = null;
+    let tempNewItemPhotoData = null;
+
+    // --- REALISTIC BBQ VFX ENGINE (SMOKE & FIRE SPARKLES) ---
+    let vfxCanvas, vfxCtx;
+    let particles = [];
+    let vfxActive = false;
+
+    function initVFX() {
+      vfxCanvas = document.getElementById('vfx-canvas');
+      vfxCtx = vfxCanvas.getContext('2d');
+      resizeVFX();
+      window.addEventListener('resize', resizeVFX);
+    }
+
+    function resizeVFX() {
+      vfxCanvas.width = window.innerWidth;
+      vfxCanvas.height = window.innerHeight;
+    }
+
+    // Trigger 1: Fire Embers & Sparkles when entering data / calculation is made
+    function triggerCalculationSparkles() {
+      const target = document.getElementById('live-calc-box');
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      
+      // Flash glowing border
+      target.classList.remove('sparkle-flare');
+      void target.offsetWidth; // force DOM reflow
+      target.classList.add('sparkle-flare');
+      setTimeout(() => target.classList.remove('sparkle-flare'), 400);
+
+      // Spawn bright flame sparks over the total box
+      for (let i = 0; i < 28; i++) {
+        const x = rect.left + Math.random() * rect.width;
+        const y = rect.top + Math.random() * rect.height;
+        particles.push({
+          type: 'sparkle',
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 4,
+          vy: - (Math.random() * 4 + 2),
+          size: Math.random() * 3.5 + 1.5,
+          alpha: 1.0,
+          decay: Math.random() * 0.03 + 0.02,
+          color: Math.random() > 0.3 ? '#ffb300' : '#ff3d00'
+        });
+      }
+      if (!vfxActive) renderVFX();
+    }
+
+    // Trigger 2: Heavy Charcoal Grill Smoke & Glowing Ember Blast on Confirm
+    function triggerGrillSmokeEffect(originX, originY) {
+      playSizzleSound();
+
+      // Smoke cloud particles
+      for (let i = 0; i < 45; i++) {
+        particles.push({
+          type: 'smoke',
+          x: originX + (Math.random() - 0.5) * 80,
+          y: originY + (Math.random() - 0.5) * 20,
+          vx: (Math.random() - 0.5) * 2.5,
+          vy: - (Math.random() * 3 + 2.5),
+          size: Math.random() * 25 + 15,
+          growth: Math.random() * 0.4 + 0.2,
+          alpha: 0.55,
+          decay: 0.009,
+          color: 'rgba(210, 195, 185,'
+        });
+      }
+
+      // Sizzling ember sparks shooting up
+      for (let i = 0; i < 35; i++) {
+        particles.push({
+          type: 'sparkle',
+          x: originX + (Math.random() - 0.5) * 60,
+          y: originY,
+          vx: (Math.random() - 0.5) * 6,
+          vy: - (Math.random() * 6 + 3),
+          size: Math.random() * 4 + 2,
+          alpha: 1.0,
+          decay: 0.02,
+          color: Math.random() > 0.5 ? '#ffab00' : '#ff5722'
+        });
+      }
+
+      if (!vfxActive) renderVFX();
+    }
+
+    function renderVFX() {
+      vfxActive = true;
+      vfxCtx.clearRect(0, 0, vfxCanvas.width, vfxCanvas.height);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+
+        if (p.type === 'smoke') {
+          p.size += p.growth;
+          p.vx *= 0.98;
+          p.vy *= 0.97;
+        } else if (p.type === 'sparkle') {
+          p.vy += 0.08; // gravity on sparks
+        }
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        vfxCtx.beginPath();
+        vfxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        if (p.type === 'smoke') {
+          vfxCtx.fillStyle = p.color + p.alpha + ')';
+        } else {
+          vfxCtx.fillStyle = p.color;
+          vfxCtx.shadowColor = p.color;
+          vfxCtx.shadowBlur = 8;
+        }
+        vfxCtx.fill();
+        vfxCtx.shadowBlur = 0; // reset
+      }
+
+      if (particles.length > 0) {
+        requestAnimationFrame(renderVFX);
+      } else {
+        vfxActive = false;
+        vfxCtx.clearRect(0, 0, vfxCanvas.width, vfxCanvas.height);
+      }
+    }
+
+    // Synthesized Authentic Grill Sizzle Sound
+    function playSizzleSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const bufferSize = ctx.sampleRate * 0.6; // 600ms of sizzle
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.25));
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1800;
+        filter.Q.value = 1.2;
+        noise.connect(filter);
+        filter.connect(ctx.destination);
+        noise.start();
+      } catch (e) {
+        // Silently continue if audio context is blocked
+      }
+    }
+
+    // --- POS LOGIC & MENU BUILDER ---
+    function loadCatalog() {
+      const saved = localStorage.getItem('bbq_catalog');
+      catalog = saved ? JSON.parse(saved) : DEFAULT_CATALOG;
+      if (!saved) saveCatalog();
+    }
+
+    function saveCatalog() {
+      localStorage.setItem('bbq_catalog', JSON.stringify(catalog));
+    }
+
+    function setupPWA() {
+      const manifest = {
+        name: "Bachelor's BBQ",
+        short_name: "BBQ POS",
+        display: "standalone",
+        background_color: "#0a0706",
+        theme_color: "#ff5722",
+        icons: [{ src: localStorage.getItem('bbq_logo_data') || "data:image/png;base64,iVBORw0KGgo=", sizes: "192x192", type: "image/png" }]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      document.getElementById('manifest-placeholder').href = URL.createObjectURL(blob);
+
+      const swCode = `self.addEventListener('fetch', (e) => {});`;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-banner').style.display = 'block';
+      });
+    }
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          document.getElementById('install-banner').style.display = 'none';
+        });
+      } else {
+        alert("To install on iOS: Tap the Share button at the bottom of Safari, then tap 'Add to Home Screen'.");
+      }
+    }
+
+    function loadSavedImages() {
+      const savedLogo = localStorage.getItem('bbq_logo_data');
+      if (savedLogo) {
+        document.documentElement.style.setProperty('--logo-url', `url(${savedLogo})`);
+        document.documentElement.style.setProperty('--logo-text-display', 'none');
+      }
+      
+      const savedPoster = localStorage.getItem('bbq_poster_data');
+      if (savedPoster) {
+        document.documentElement.style.setProperty('--poster-url', `url(${savedPoster})`);
+        document.documentElement.style.setProperty('--poster-banner-display', 'none');
+      }
+    }
+
+    function processImage(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          
+          if (type === 'logo') {
+            localStorage.setItem('bbq_logo_data', dataUrl);
+          } else {
+            localStorage.setItem('bbq_poster_data', dataUrl);
+          }
+          loadSavedImages();
+          renderMenuItems();
+          setupPWA();
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function triggerItemPhotoUpload(itemId) {
+      pendingUploadItemId = itemId;
+      document.getElementById('item-image-upload').click();
+    }
+
+    function triggerNewItemPhoto() {
+      pendingUploadItemId = '__NEW_ITEM__';
+      document.getElementById('item-image-upload').click();
+    }
+
+    function processItemImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 300;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+          if (pendingUploadItemId === '__NEW_ITEM__') {
+            tempNewItemPhotoData = dataUrl;
+            document.getElementById('new-item-photo-preview').innerText = '✓ Photo Selected';
+          } else {
+            const item = catalog.find(i => i.id === pendingUploadItemId);
+            if (item) {
+              item.customImg = dataUrl;
+              saveCatalog();
+              renderMenuItems();
+              renderAdminItems();
+              alert(`Photo updated for ${item.name}!`);
+            }
+          }
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function renderMenuItems() {
+      const container = document.getElementById('menu-items-container');
+      container.innerHTML = '';
+
+      catalog.forEach(item => {
+        let bgStyle = '';
+        if (item.customImg) {
+          bgStyle = `background-image: url('${item.customImg}');`;
+        } else if (item.posterPos) {
+          bgStyle = `background-image: var(--poster-url); background-repeat: no-repeat; background-size: 260% auto; background-position: ${item.posterPos};`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'kebab-item';
+        div.innerHTML = `
+          <div class="item-meta">
+            <div class="kebab-thumb" style="${bgStyle}"></div>
+            <div class="item-info">
+              <h4>${item.name}</h4>
+              <span>₹${item.price} / Stick</span>
+            </div>
+          </div>
+          <select id="qty-${item.id}" class="custom-select-qty" onchange="calcTotal(true)"></select>
+        `;
+        container.appendChild(div);
+
+        const sel = div.querySelector('select');
+        sel.innerHTML = '<option value="0">0 Stick</option>';
+        for (let i = 0.5; i <= 10; i += 0.5) {
+          sel.innerHTML += `<option value="${i}">${i} Stick${i > 1 ? 's' : ''}</option>`;
+        }
+      });
+      calcTotal(false);
+    }
+
+    function initMenuDate() {
+      const today = new Date().toISOString().split('T')[0];
+      const menuDatePicker = document.getElementById('order-date-picker');
+      menuDatePicker.value = today;
+      updateMenuDateDisplay();
+    }
+
+    function updateMenuDateDisplay() {
+      const picker = document.getElementById('order-date-picker');
+      const val = picker.value;
+      if (!val) return;
+      const dateObj = new Date(val + 'T00:00:00');
+      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      document.getElementById('menu-date-display').textContent = dateObj.toLocaleDateString(undefined, options);
+    }
+
+    window.onload = () => {
+      initVFX();
+      loadCatalog();
+      loadSavedImages();
+      setupPWA();
+      initMenuDate();
+      renderMenuItems();
+      document.getElementById('date-picker').value = new Date().toISOString().split('T')[0];
+    };
+
+    // Calculate total with optional sparkle effect when values change
+    function calcTotal(shouldSparkle = false) {
+      let tot = 0, stk = 0;
+      catalog.forEach(item => {
+        const el = document.getElementById(`qty-${item.id}`);
+        const q = el ? (parseFloat(el.value) || 0) : 0;
+        tot += q * item.price;
+        stk += q;
+      });
+
+      document.getElementById('live-total').innerText = tot;
+      document.getElementById('live-sticks').innerText = stk;
+
+      if (document.getElementById('payment-mode').value === 'Mixed') {
+        document.getElementById('split-online').value = Math.floor(tot / 2);
+        document.getElementById('split-offline').value = Math.ceil(tot / 2);
+      }
+
+      if (shouldSparkle && tot > 0) {
+        triggerCalculationSparkles();
+      }
+      return tot;
+    }
+
+    function checkSplit() {
+      document.getElementById('split-box').className = document.getElementById('payment-mode').value === 'Mixed' ? '' : 'hidden';
+      calcTotal(true);
+    }
+
+    function submitOrder(e) {
+      const tot = calcTotal(false);
+      if (tot <= 0) return alert("Select at least 0.5 stick!");
+      
+      const chosenDate = document.getElementById('order-date-picker').value || new Date().toISOString().split('T')[0];
+      const mode = document.getElementById('payment-mode').value;
+      const onl = mode === 'Online' ? tot : (mode === 'Mixed' ? parseFloat(document.getElementById('split-online').value) : 0);
+      const off = mode === 'Offline' ? tot : (mode === 'Mixed' ? parseFloat(document.getElementById('split-offline').value) : 0);
+
+      const itemsSnapshot = {};
+      catalog.forEach(item => {
+        const el = document.getElementById(`qty-${item.id}`);
+        itemsSnapshot[item.id] = el ? el.value : "0";
+      });
+
+      const order = {
+        id: Date.now(),
+        date: chosenDate,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        items: itemsSnapshot,
+        total: tot,
+        mode: mode,
+        online: onl,
+        offline: off
+      };
+
+      const sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      sales.unshift(order);
+      localStorage.setItem('bbq_sales', JSON.stringify(sales));
+      
+      // TRIGGER REALISTIC SMOKE & SIZZLE AT BUTTON POSITION
+      const rect = e.target.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top;
+      triggerGrillSmokeEffect(originX, originY);
+
+      // Reset
+      catalog.forEach(item => {
+        const el = document.getElementById(`qty-${item.id}`);
+        if (el) el.value = "0";
+      });
+      document.getElementById('payment-mode').value = "Online";
+      checkSplit();
+    }
+
+    function switchTab(id) {
+      document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.remove('hidden');
+      event.target.classList.add('active');
+
+      if (id === 'dailyReport') renderDaily();
+      if (id === 'allTime') renderAll();
+    }
+
+    function deleteOrder(id) {
+      if (!confirm("Are you sure you want to permanently delete this order?")) return;
+      let sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      sales = sales.filter(s => s.id !== id);
+      localStorage.setItem('bbq_sales', JSON.stringify(sales));
+      renderDaily();
+      renderAll();
+    }
+
+    function openEditModal(id) {
+      const sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      const order = sales.find(s => s.id === id);
+      if (!order) return;
+
+      document.getElementById('edit-order-id').value = order.id;
+      document.getElementById('edit-date').value = order.date;
+
+      const itemsContainer = document.getElementById('edit-modal-items-container');
+      itemsContainer.innerHTML = '';
+
+      catalog.forEach(item => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label style="font-size:0.75rem; color:var(--text-muted);">${item.name}</label>
+          <select id="edit-qty-${item.id}" style="width:100%" onchange="calcEditTotal()"></select>
+        `;
+        itemsContainer.appendChild(div);
+
+        const sel = div.querySelector('select');
+        sel.innerHTML = '<option value="0">0</option>';
+        for (let i = 0.5; i <= 10; i += 0.5) sel.innerHTML += `<option value="${i}">${i}</option>`;
+        sel.value = (order.items && order.items[item.id]) ? order.items[item.id] : "0";
+      });
+
+      document.getElementById('edit-mode').value = order.mode;
+      if (order.mode === 'Mixed') {
+        document.getElementById('edit-split-box').classList.remove('hidden');
+        document.getElementById('edit-split-online').value = order.online;
+        document.getElementById('edit-split-offline').value = order.offline;
+      } else {
+        document.getElementById('edit-split-box').classList.add('hidden');
+      }
+
+      calcEditTotal();
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    function checkEditSplit() {
+      const mode = document.getElementById('edit-mode').value;
+      if (mode === 'Mixed') {
+        document.getElementById('edit-split-box').classList.remove('hidden');
+        const tot = calcEditTotal();
+        document.getElementById('edit-split-online').value = Math.floor(tot / 2);
+        document.getElementById('edit-split-offline').value = Math.ceil(tot / 2);
+      } else {
+        document.getElementById('edit-split-box').classList.add('hidden');
+      }
+      calcEditTotal();
+    }
+
+    function calcEditTotal() {
+      let tot = 0;
+      catalog.forEach(item => {
+        const el = document.getElementById(`edit-qty-${item.id}`);
+        const q = el ? (parseFloat(el.value) || 0) : 0;
+        tot += q * item.price;
+      });
+      document.getElementById('edit-total-val').innerText = tot;
+      return tot;
+    }
+
+    function saveEditedOrder() {
+      const id = parseInt(document.getElementById('edit-order-id').value);
+      const tot = calcEditTotal();
+      if (tot <= 0) return alert("Order must contain at least 0.5 stick!");
+
+      const mode = document.getElementById('edit-mode').value;
+      const onl = mode === 'Online' ? tot : (mode === 'Mixed' ? parseFloat(document.getElementById('edit-split-online').value) : 0);
+      const off = mode === 'Offline' ? tot : (mode === 'Mixed' ? parseFloat(document.getElementById('edit-split-offline').value) : 0);
+
+      let sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      const idx = sales.findIndex(s => s.id === id);
+      if (idx !== -1) {
+        sales[idx].date = document.getElementById('edit-date').value;
+        catalog.forEach(item => {
+          const el = document.getElementById(`edit-qty-${item.id}`);
+          if (el) sales[idx].items[item.id] = el.value;
+        });
+        sales[idx].total = tot;
+        sales[idx].mode = mode;
+        sales[idx].online = onl;
+        sales[idx].offline = off;
+
+        localStorage.setItem('bbq_sales', JSON.stringify(sales));
+        closeEditModal();
+        renderDaily();
+        renderAll();
+        alert("Record updated successfully! ✅");
+      }
+    }
+
+    function renderDaily() {
+      const d = document.getElementById('date-picker').value;
+      const sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]').filter(s => s.date === d);
+      drawStats(sales, 'daily');
+    }
+
+    function renderAll() {
+      const sales = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      drawStats(sales, 'all');
+    }
+
+    function drawStats(sales, prefix) {
+      let t = 0, on = 0, of = 0;
+      const counts = {};
+      catalog.forEach(item => counts[item.id] = 0);
+
+      sales.forEach(s => {
+        t += s.total;
+        on += s.online;
+        of += s.offline;
+        if (s.items) {
+          catalog.forEach(item => {
+            counts[item.id] += parseFloat(s.items[item.id] || 0);
+          });
+        }
+      });
+
+      const kebabCountsHtml = catalog.map(item => `🍢 ${item.name}: <b>${counts[item.id]}</b>`).join(' | ');
+
+      document.getElementById(prefix + '-stats').innerHTML = `
+        <h3 style="color:#ff9800; margin-bottom:10px;">Collection: ₹${t}</h3>
+        Online: <span style="color:#64b5f6">₹${on}</span> | Cash: <span style="color:#81c784">₹${of}</span><hr style="border-color:#333; margin:10px 0;">
+        <div style="font-size:0.85rem; line-height:1.6;">${kebabCountsHtml}</div>
+      `;
+      
+      document.getElementById(prefix + '-list').innerHTML = sales.map(s => {
+        const itemSummaries = catalog.map(item => `${item.name.split(' ')[0]}: ${(s.items && s.items[item.id]) ? s.items[item.id] : 0}`).join(' | ');
+        return `
+          <div class="record-card">
+            <div class="record-header">
+              <div>
+                <b style="color:#fff; font-size:1.05rem;">₹${s.total}</b> 
+                <span style="font-size:0.7rem; background:#33221a; color:var(--accent-gold); border:1px solid rgba(255,152,0,0.3); padding:2px 6px; border-radius:4px; margin-left:4px;">${s.mode}</span>
+              </div>
+              <span style="color:#888; font-size:0.78rem;">${s.date} ${s.time}</span>
+            </div>
+            <div style="font-size:0.8rem; color:#aaa;">
+              ${itemSummaries}
+              ${s.mode === 'Mixed' ? `<br><small style="color:var(--accent-gold);">UPI: ₹${s.online} \vert{} Cash: ₹${s.offline}</small>` : ''}
+            </div>
+            <div class="record-actions">
+              <button class="btn-action btn-edit" onclick="openEditModal(${s.id})">✏️ Edit</button>
+              <button class="btn-action btn-delete" onclick="deleteOrder(${s.id})">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('') || "<p style='text-align:center; color:#888; padding:10px;'>No sales records found.</p>";
+    }
+
+    function exportData() {
+      const s = JSON.parse(localStorage.getItem('bbq_sales') || '[]');
+      if (!s.length) return alert("No data to export.");
+      
+      const itemHeaders = catalog.map(i => i.name).join(',');
+      let csv = `Date,Time,${itemHeaders},Total,Mode,Online,Cash\n`;
+      
+      s.forEach(x => {
+        const itemVals = catalog.map(i => (x.items && x.items[i.id]) ? x.items[i.id] : 0).join(',');
+        csv += `${x.date},${x.time},${itemVals},${x.total},${x.mode},${x.online},${x.offline}\n`;
+      });
+      
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      a.download = "BBQ_Sales.csv";
+      a.click();
+    }
+
+    // --- ADMIN MODAL CONTROLLERS ---
+    function openAdminModal() {
+      document.getElementById('admin-pin-input').value = '';
+      document.getElementById('admin-lock-box').classList.remove('hidden');
+      document.getElementById('admin-console').classList.add('hidden');
+      document.getElementById('admin-modal').classList.remove('hidden');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.add('hidden');
+    }
+
+    function lockAdminConsole() {
+      document.getElementById('admin-pin-input').value = '';
+      document.getElementById('admin-lock-box').classList.remove('hidden');
+      document.getElementById('admin-console').classList.add('hidden');
+      closeAdminModal();
+    }
+
+    function unlockAdmin() {
+      const pin = document.getElementById('admin-pin-input').value.trim();
+      const storedPin = localStorage.getItem('bbq_admin_pin') || DEFAULT_MASTER_PIN;
+      
+      if (pin === storedPin) {
+        document.getElementById('admin-lock-box').classList.add('hidden');
+        document.getElementById('admin-console').classList.remove('hidden');
+        renderAdminItems();
+      } else {
+        alert("Incorrect PIN! The master default PIN is " + DEFAULT_MASTER_PIN);
+      }
+    }
+
+    function updateAdminPin() {
+      const newPin = document.getElementById('new-admin-pin').value.trim();
+      if (!newPin || newPin.length < 4) return alert("PIN must be at least 4 digits!");
+      
+      localStorage.setItem('bbq_admin_pin', newPin);
+      document.getElementById('new-admin-pin').value = '';
+      alert("PIN successfully changed to: " + newPin + "\nKeep this safe!");
+    }
+
+    function renderAdminItems() {
+      const list = document.getElementById('admin-items-list');
+      list.innerHTML = '';
+
+      catalog.forEach(item => {
+        let bgStyle = '';
+        if (item.customImg) {
+          bgStyle = `background-image: url('${item.customImg}');`;
+        } else if (item.posterPos) {
+          bgStyle = `background-image: var(--poster-url); background-repeat: no-repeat; background-size: 260% auto; background-position: ${item.posterPos};`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'admin-item-row';
+        div.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="admin-thumb-box" style="${bgStyle}" onclick="triggerItemPhotoUpload('${item.id}')" title="Tap to change photo">📷</div>
+            <b style="font-size:0.85rem;">${item.name}</b>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:0.85rem; color:var(--accent-gold);">₹</span>
+            <input type="number" id="admin-p-${item.id}" value="${item.price}" style="width:68px; padding:6px; font-weight:700;">
+            <button class="btn-action btn-edit" onclick="updateItemPrice('${item.id}')">Save</button>
+            <button class="btn-action btn-delete" onclick="deleteCatalogItem('${item.id}')">✕</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function updateItemPrice(id) {
+      const newPrice = parseFloat(document.getElementById(`admin-p-${id}`).value) || 0;
+      const item = catalog.find(i => i.id === id);
+      if (item) {
+        item.price = newPrice;
+        saveCatalog();
+        renderMenuItems();
+        alert(`Updated ${item.name} price to ₹${newPrice}! Live bill will now use this rate.`);
+      }
+    }
+
+    function addNewMenuItem() {
+      const name = document.getElementById('new-item-name').value.trim();
+      const price = parseFloat(document.getElementById('new-item-price').value) || 0;
+      if (!name) return alert("Please enter the item name!");
+      if (price <= 0) return alert("Please specify a valid stick price!");
+
+      const id = 'item_' + Date.now().toString().slice(-5);
+      catalog.push({
+        id: id,
+        name: name,
+        price: price,
+        posterPos: null,
+        customImg: tempNewItemPhotoData
+      });
+
+      saveCatalog();
+      renderMenuItems();
+      renderAdminItems();
+
+      document.getElementById('new-item-name').value = '';
+      document.getElementById('new-item-price').value = '';
+      document.getElementById('new-item-photo-preview').innerText = '';
+      tempNewItemPhotoData = null;
+
+      alert(`Added "${name}" to the menu at ₹${price} per stick!`);
+    }
+
+    function deleteCatalogItem(id) {
+      if (catalog.length <= 1) return alert("You must keep at least 1 item on the menu!");
+      const item = catalog.find(i => i.id === id);
+      if (!confirm(`Are you sure you want to remove "${item.name}" from the active menu?`)) return;
+      catalog = catalog.filter(i => i.id !== id);
+      saveCatalog();
+      renderMenuItems();
+      renderAdminItems();
+    }
+  </script>
+</body>
+</html>
